@@ -17,23 +17,24 @@
         @stack('styles')
 
         <style>
-            :root {
-                --primary-color: {{ $settings['primary_color'] ?? '#ef4444' }};
-                --secondary-color: {{ $settings['secondary_color'] ?? '#71717a' }};
-            }
-            /* REGLA CRÍTICA PARA ALPINE.JS */
-            [x-cloak] { display: none !important; }
+    :root {
+        /* Esto lee tus colores de la base de datos o usa los por defecto */
+        --custom-primary: {{ $settings['primary_color'] ?? '#f21313' }};
+        --custom-secondary: {{ $settings['secondary_color'] ?? '#1a1a1a' }};
+    }
 
-            body {
-                font-family: 'Roboto', sans-serif;
-                -webkit-font-smoothing: antialiased;
-            }
-            .text-custom-primary { color: var(--primary-color) !important; }
-            .bg-custom-primary { background-color: var(--primary-color) !important; }
-            .border-custom-primary { border-color: var(--primary-color) !important; }
-            /* Dark mode specific backgrounds */
-            .dark body { background-color: #09090b; color: #f4f4f5; }
-        </style>
+    .bg-custom-primary { background-color: var(--custom-primary); }
+    .bg-custom-secondary { background-color: var(--custom-secondary); }
+    .text-custom-primary { color: var(--custom-primary); }
+    .text-custom-secondary { color: var(--custom-secondary); }
+    
+    /* Efecto hover suave para el color secundario */
+    .hover-secondary:hover {
+        filter: brightness(1.2);
+        transition: all 0.3s;
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     </head>
     <body class="antialiased"> {{-- CORRECCIÓN 1: Quité 'overflow-hidden' de aquí para evitar conflictos de scroll con el modal --}}
         <div class="flex h-screen overflow-hidden bg-white dark:bg-zinc-950">

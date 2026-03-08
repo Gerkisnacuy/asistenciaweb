@@ -65,11 +65,11 @@ class EmployeeController extends Controller
     /**
      * Muestra el formulario para editar el personal.
      */
-    public function edit(Employee $employee)
-    {
-        $settings = Setting::pluck('value', 'key')->all();
-        return view('employees.edit', compact('employee', 'settings'));
-    }
+   public function edit(Employee $employee)
+{
+    // Es vital que la variable se pase a la vista con el nombre 'employee'
+    return view('employees.edit', compact('employee'));
+}
 
     /**
      * Actualiza el registro en la base de datos.

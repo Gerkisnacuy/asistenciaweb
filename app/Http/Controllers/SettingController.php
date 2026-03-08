@@ -13,8 +13,10 @@ class SettingController extends Controller
      */
     public function index()
     {
-        // Las configuraciones ya están disponibles en todas las vistas vía AppServiceProvider
-        return view('settings.index');
+        // Convertimos todas las filas en un array asociativo ['key' => 'value']
+        $settings = Setting::pluck('value', 'key')->all();
+        
+        return view('settings.index', compact('settings'));
     }
 
     /**
@@ -22,38 +24,47 @@ class SettingController extends Controller
      */
     public function update(Request $request)
     {
-        // 1. Validación de todos los campos solicitados
+        // 1. Validación exhaustiva
         $request->validate([
             'site_name'       => 'required|string|max:255',
             'site_rif'        => 'required|string|max:20',
             'site_phone'      => 'nullable|string|max:20',
             'site_email'      => 'nullable|email|max:255',
             'site_address'    => 'nullable|string',
-            'primary_color'   => 'required|string|size:7', // Formato #RRGGBB
-            'secondary_color' => 'required|string|size:7', // Formato #RRGGBB
+            'primary_color'   => 'required|string|size:7', 
+            'secondary_color' => 'required|string|size:7', 
             'theme_mode'      => 'required|in:light,dark',
-            'site_logo'       => 'nullable|image|mimes:jpg,jpeg,png,svg|max:2048', // Máximo 2MB
+            'site_logo'       => 'nullable|image|mimes:jpg,jpeg,png,svg|max:2048', 
+            
+            // --- CAMPOS DE ASISTENCIA ---
+            'p_hora_entrada'  => 'required|string', 
+            'p_tolerancia'    => 'required|integer|min:0',
+            'p_hora_salida'   => 'required|string', 
         ]);
 
-        // 2. Procesar la subida del Logo
+        // 2. Procesar la subida del Logo (Si existe)
         if ($request->hasFile('site_logo')) {
-            // Obtener el nombre del logo actual para eliminarlo
+            // Buscamos si ya existe un logo previo para borrar el archivo físico
             $currentLogo = Setting::where('key', 'site_logo')->value('value');
             
             if ($currentLogo && Storage::disk('public')->exists($currentLogo)) {
                 Storage::disk('public')->delete($currentLogo);
             }
 
-            // Guardar el nuevo logo en storage/app/public/logos
+            // Guardamos el nuevo logo
             $path = $request->file('site_logo')->store('logos', 'public');
-            Setting::where('key', 'site_logo')->update(['value' => $path]);
+            Setting::updateOrCreate(['key' => 'site_logo'], ['value' => $path]);
         }
 
-        // 3. Actualizar los campos de texto y colores
+        // 3. Actualizar los campos de texto, colores y horarios
+        // IMPORTANTE: Excluimos _method porque tu formulario usa @method('PATCH')
         $inputs = $request->except(['_token', '_method', 'site_logo']);
         
         foreach ($inputs as $key => $value) {
-            Setting::where('key', $key)->update(['value' => $value]);
+            Setting::updateOrCreate(
+                ['key' => $key],
+                ['value' => $value]
+            );
         }
 
         return redirect()->route('settings.index')->with('success', 'La configuración institucional ha sido actualizada correctamente.');

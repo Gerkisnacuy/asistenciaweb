@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\HasMany; // Importación necesaria
 
 class Employee extends Model
 {
@@ -24,6 +25,15 @@ class Employee extends Model
         'foto',
         'status'
     ];
+
+    /**
+     * RELACIÓN: Un empleado tiene muchas asistencias.
+     * Uso: $employee->attendances
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
 
     /**
      * Accesor para obtener el nombre completo de forma sencilla.

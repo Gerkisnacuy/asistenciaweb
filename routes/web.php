@@ -4,6 +4,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\AbsenceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,12 +15,19 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// Pantalla de bienvenida
 Route::get('/', function () {
     return view('welcome');
 });
 
 /**
- * DASHBOARD PRINCIPAL
+ * MÓDULO DE MARCADO DE ASISTENCIA (Acceso Público)
+ */
+Route::get('/asistencia', [AttendanceController::class, 'index'])->name('asistencia.index');
+Route::post('/asistencia/marcar', [AttendanceController::class, 'store'])->name('asistencia.store');
+
+/**
+ * DASHBOARD PRINCIPAL (Requiere Login)
  */
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -28,7 +38,7 @@ Route::get('/dashboard', function () {
  */
 Route::middleware('auth')->group(function () {
 
-    // --- Gestión de Perfil de Usuario (Breeze) ---
+    // Gestión de Perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -36,35 +46,39 @@ Route::middleware('auth')->group(function () {
     /**
      * MÓDULO DE PERSONAL
      */
-    Route::get('/personal', [EmployeeController::class, 'index'])->name('employees.index');
-    Route::get('/personal/crear', [EmployeeController::class, 'create'])->name('employees.create');
-    Route::post('/personal', [EmployeeController::class, 'store'])->name('employees.store');
-    
-    // CORRECCIÓN DE ORDEN: La ruta estática 'importar' debe ir ANTES de las rutas con parámetros {employee}
-    Route::post('/personal/importar', [EmployeeController::class, 'import'])->name('employees.import');
-
-    // Rutas con parámetros
-    Route::get('/personal/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
-    Route::get('/personal/{employee}/editar', [EmployeeController::class, 'edit'])->name('employees.edit');
-    Route::patch('/personal/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
-    Route::delete('/personal/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+    Route::post('/employees/import', [EmployeeController::class, 'import'])->name('employees.import');
+    Route::resource('employees', EmployeeController::class);
 
     /**
-     * ZONA ADMINISTRATIVA (Solo Super Admin)
+     * ZONA ADMINISTRATIVA (Solo Super Administrador)
      */
     Route::middleware('role:super_admin')->group(function () {
         
-        // Gestión de Usuarios (CRUD completo)
-        Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
-        Route::get('/usuarios/crear', [UserController::class, 'create'])->name('usuarios.create');
-        Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
-        Route::get('/usuarios/{usuario}/editar', [UserController::class, 'edit'])->name('usuarios.edit');
-        Route::patch('/usuarios/{usuario}', [UserController::class, 'update'])->name('usuarios.update');
-        Route::delete('/usuarios/{usuario}', [UserController::class, 'destroy'])->name('usuarios.destroy');
+        // Gestión de Usuarios del Sistema
+        Route::resource('usuarios', UserController::class)->names('usuarios');
 
-        // Configuración Institucional
+        // Configuración Global
         Route::get('/configuracion', [SettingController::class, 'index'])->name('settings.index');
         Route::patch('/configuracion', [SettingController::class, 'update'])->name('settings.update');
+        
+        // Reportes y Consultas
+        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+        Route::get('/reportes/asistencia/detallado', [AttendanceController::class, 'report'])->name('asistencia.report');
+
+        /**
+         * GESTIÓN DE INASISTENCIAS (Absences)
+         */
+        // NUEVA RUTA: Procesar inasistencias manualmente
+        Route::post('/inasistencias/procesar', [AbsenceController::class, 'procesarManual'])->name('inasistencias.procesar');
+        
+        // Justificar y Eliminar
+        Route::put('/inasistencias/{id}', [AbsenceController::class, 'update'])->name('inasistencia.update');
+        Route::delete('/inasistencias/{id}', [AbsenceController::class, 'destroy'])->name('inasistencia.destroy');
+
+        /**
+         * GESTIÓN DE ASISTENCIAS
+         */
+        Route::delete('/asistencias/{id}', [AttendanceController::class, 'destroy'])->name('asistencia.destroy');
     });
 });
 

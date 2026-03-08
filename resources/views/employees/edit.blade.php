@@ -24,6 +24,7 @@
 
     <div class="py-8 px-4 sm:px-6 lg:px-8">
         <div class="max-w-5xl mx-auto">
+            {{-- CORRECCIÓN: Se añade explícitamente el parámetro 'personal' para coincidir con el resource de la ruta --}}
             <form id="employeeForm" action="{{ route('employees.update', $employee) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
